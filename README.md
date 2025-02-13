@@ -1,9 +1,9 @@
 # Rootless samba container
-Ultra simple rootless samba container for us who do not like daemons running root, not even in containers. Naturally limits use cases quite a lot as samba must run as single user and single user only. Hence you need separate container for each user and each container needs it's own IP. At some point it becomes ridiculous so I guess this is best suited for home use where you need to have one or two users and perhaps public share for media devices or so.
+Ultra simple rootless samba container for us who do not like daemons running root, not even in containers. Naturally limits use cases quite a lot as samba must run as single OS user and single OS user only. Hence you need separate container for each OS user and each container needs it's own IP. At some point it becomes ridiculous so I guess this is best suited for home use where you need to have one or two users and perhaps public share for media devices or so.
 
-When planning implementation, it is best to kind of forget how samba normally operates with multiple users and think one samba container as one user's own personal file server. Even if you enable unauthenticated guest access then samba will still operate as that user when somebody accesses guest shares! Thus to avoid security hazards by misconfiguration it probably is the best to create separate guest container for public files and not mix and match.
+When planning implementation, it is best to kind of forget how samba normally operates with multiple users and think one samba container as one OS user's own personal file server. Even if you enable unauthenticated guest access or create multiple samba users for single container, samba will still operate as single OS user no matter what samba user you logged in as or if you are guest! Thus to avoid security hazards by misconfiguration it probably is the best to create separate guest container for public files and not mix and match.
 
-Additionally DFS can be used to aggregate shares from multiple containers into one so you could have one guest container and one user's container which also shows shares from guest container.
+Additionally DFS can be used to aggregate shares from multiple containers into one so you could have one guest container and one user's container which also shows shares from guest container. 
 
 # Compose file
 
@@ -21,8 +21,8 @@ Mandatory environment variables:
 
 Optional environment variables:
 
-* ```USER``` - Username used to access the shares. If not defined then only guest shares can be accessed.
-* ```PASS``` - Passwors used to access the shares. If not defined then only guest shares can be accessed.
+* ```USER``` - Samba username used to access the shares. If not defined then only guest shares can be accessed.
+* ```PASS``` - Samba passwor used to access the shares. If not defined then only guest shares can be accessed.
 * ```WORKGROUP``` - Workgroup. Defaults to MYGROUP.
 * ```SERVER_STRING``` - Server string. Defaults to Samba Server.
 * ```SERVER_ROLE``` - Server role. Defaults to standalone server.
@@ -31,6 +31,8 @@ Optional environment variables:
 * ```DNS_PROXY``` - DNS proxy enable. Defaults to no.
 * ```ALLOW_SMBV1``` - Downgrades security back to 80s for retro gear. See Security considerations.
 * ```GLOBAL_OPTS``` - Additional global options if not listed above.
+
+Multiple samba users can be added by defining ```USER``` and ```PASS``` variables multiple times and prefixing them with XXX_ where XXX is user specific string. One user can be unprefixed and all users can be prefixed. Again, despite of having multiple samba users container will still operate using single OS user.
 
 ### For share sections
 
@@ -45,6 +47,7 @@ Optional environment variables:
 
 * ```COMMENT``` - Share comment.
 * ```PUBLIC``` - If set to yes then guest access is enabled for the share. Note that ```ANONYMOUS``` also needs to be set to yes. Defaults to no.
+* ```VALID_USERS``` - List of samba users allowed to access the share. Defaults to all users if share is not public and if it is then omitted by default.
 * ```WRITABLE``` - Share is writable (still needs filesystemlevel access for the ```UID``` or ```GID```). Defaults to no.
 * ```BROWSEABLE``` - Share shows up in share listings. Defaults to no.
 * ```CREATE_MASK``` - File create mask.
