@@ -1,9 +1,9 @@
 # Rootless samba container
-Ultra simple rootless samba container for us who do not like daemons running root, not even in containers. Naturally limits use cases quite a lot as samba must run as single OS user and single OS user only. Hence you need separate container for each OS user and each container needs it's own IP. At some point it becomes ridiculous so I guess this is best suited for home use where you need to have one or two users and perhaps public share for media devices or so.
+Ultra simple rootless samba container for us who do not like daemons running root, not even in containers. Naturally limits use cases quite a lot as samba must run as single user and single user only. Hence you need separate container for each user and each container needs it's own IP address. At some point it becomes ridiculous so I guess this is best suited for home use where you need to have one or two users and perhaps public share for media devices or so.
 
-When planning implementation, it is best to kind of forget how samba normally operates with multiple users and think one samba container as one OS user's own personal file server. Even if you enable unauthenticated guest access or create multiple samba users for single container, samba will still operate as single OS user no matter what samba user you logged in as or if you are guest! Thus to avoid security hazards by misconfiguration it probably is the best to create separate guest container for public files and not mix and match.
+When planning implementation, it is best to kind of forget how samba normally operates with multiple users and think one instance of container as a personal file server of single user. Even if you enable guest access or create multiple logins for single container, samba will still operate as single user no matter what. Thus to avoid security hazards by misconfiguration it probably is the best to create separate guest container for public files and not mix and match.
 
-Additionally DFS can be used to aggregate shares from multiple containers into one so you could have one guest container and one user's container which also shows shares from guest container. 
+DFS can be used to aggregate shares from multiple containers into one so you could e.g. have guest container and make shares from it visible in other containers. You could also e.g. create multiple logins to guest container so that logins from you other containers do work with guest container and you won't be prompted for login when you seamlessly navigate to guest shares by DFS and since guest container is running as single user your guest container file ownerships will not be messed up (this is actually something which could be very useful in home environment, though may be difficult to manage properly).
 
 # Compose file
 
@@ -22,7 +22,7 @@ Mandatory environment variables:
 Optional environment variables:
 
 * ```USER``` - Samba username used to access the shares. If not defined then only guest shares can be accessed.
-* ```PASS``` - Samba passwor used to access the shares. If not defined then only guest shares can be accessed.
+* ```PASS``` - Samba password used to access the shares. If not defined then only guest shares can be accessed.
 * ```WORKGROUP``` - Workgroup. Defaults to MYGROUP.
 * ```SERVER_STRING``` - Server string. Defaults to Samba Server.
 * ```SERVER_ROLE``` - Server role. Defaults to standalone server.
@@ -32,11 +32,11 @@ Optional environment variables:
 * ```ALLOW_SMBV1``` - Downgrades security back to 80s for retro gear. See Security considerations.
 * ```GLOBAL_OPTS``` - Additional global options if not listed above.
 
-Multiple samba users can be added by defining ```USER``` and ```PASS``` variables multiple times and prefixing them with XXX_ where XXX is user specific string. One user can be unprefixed and all users can be prefixed. Again, despite of having multiple samba users container will still operate using single OS user.
+Note that we use term login when we refer to username and password given to samba when accessing the share. This is different from user which samba is running. Container always runs as single user and filesystem permissions for that user are enforced, but container could also have multiple logins all of which in the end operates as that single user (we do this by creating multiple pseudo-users with the same UID and GID than main samba user). Multiple logins can be added by defining ```USER``` and ```PASS``` variables multiple times and prefixing them with XXX_. One user can be unprefixed or all users can be prefixed. 
 
 ### For share sections
 
-Multiple shares can be added by defining variables below multiple times and prefixing them with XXX_ where XXX is share specific string. One share can be unprefixed and all shares can be prefixed.
+Multiple shares can be added by defining variables below multiple times and prefixing them with XXX_ where XXX is share specific string. One share can be unprefixed or all shares can be prefixed.
 
 Mandatory environment variables:
 
@@ -47,7 +47,7 @@ Optional environment variables:
 
 * ```COMMENT``` - Share comment.
 * ```PUBLIC``` - If set to yes then guest access is enabled for the share. Note that ```ANONYMOUS``` also needs to be set to yes. Defaults to no.
-* ```VALID_USERS``` - List of samba users allowed to access the share. Defaults to all users if share is not public and if it is then omitted by default.
+* ```VALID_USERS``` - List of logins allowed to access the share. Defaults to all users if share is not public and if it is then omitted by default.
 * ```WRITABLE``` - Share is writable (still needs filesystemlevel access for the ```UID``` or ```GID```). Defaults to no.
 * ```BROWSEABLE``` - Share shows up in share listings. Defaults to no.
 * ```CREATE_MASK``` - File create mask.
@@ -65,7 +65,6 @@ In case of multiple containers you really would need macvlan or ipvaln setup so 
 ## Examples
 
 ### Single share
-
 ```
 services:
   samba-single:
@@ -86,11 +85,9 @@ services:
       - BROWSEABLE=yes
     volumes:
       - /mnt/Share:/data/Share
-
 ```
 
 ### Multiple shares
-
 ```
 services:
   samba-multi:
@@ -118,9 +115,7 @@ services:
       - /mnt/Work:/data/Work
 ```
 
-
 ### Guest shares
-
 ```
   samba-guest:
     container_name: samba_guest
@@ -148,10 +143,33 @@ services:
     volumes:
       - /mnt/Media:/data/Media
       - /mnt/Incoming:/data/Incoming
-
-
-
 ```
+
+### Multiple logins
+```
+services:
+  samba-single:
+    container_name: samba_single
+    build:
+      context: src
+    restart: always
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      - UID=1234
+      - GID=1234
+      - USER1_USER=user1
+      - USER1_PASS=***
+      - USER2_USER=user2
+      - USER2_PASS=***
+      - NAME=Share
+      - PATH=/data/Share
+      - WRITABLE=yes
+      - BROWSEABLE=yes
+    volumes:
+      - /mnt/Share:/data/Share
+```
+
 
 ### DFS
 
