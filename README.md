@@ -3,7 +3,7 @@ Ultra simple rootless samba container for us who do not like daemons running roo
 
 When planning implementation, it is best to kind of forget how samba normally operates with multiple users and think one instance of container as a personal file server of single user. Even if you enable guest access or create multiple logins for single container, samba will still operate as single user no matter what. Thus to avoid security hazards by misconfiguration it probably is the best to create separate guest container for public files and not mix and match.
 
-DFS can be used to aggregate shares from multiple containers into one so you could e.g. have guest container and make shares from it visible in other containers. You could also e.g. create multiple logins to guest container so that logins from you other containers do work with guest container and you won't be prompted for login when you seamlessly navigate to guest shares by DFS and since guest container is running as single user your guest container file ownerships will not be messed up (this is actually something which could be very useful in home environment, though may be difficult to manage properly).
+DFS can be used to aggregate shares from multiple containers into one so you could e.g. have guest container and make shares from it visible in other containers or vice versa. You could also e.g. create multiple logins to guest container so that logins from you other containers do work with guest container and you won't be prompted for login when you seamlessly navigate to guest shares by DFS and since guest container is running as single user your guest container file ownerships will not be messed up (this is actually something which could be very useful in home environment, though may be difficult to manage properly).
 
 # Compose file
 
@@ -172,13 +172,37 @@ services:
 
 
 ### DFS
+In this example we set up public share without any need to login and then use DFS to show Cloud share from another container (which can then require login when navigated to).
 
 ```
+  samba-guest:
+    container_name: samba_guest
+    build:
+      context: src
+    restart: always
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      - UID=1234
+      - GID=1234
+      - ANONYMOUS=yes
+      - MEDIA_NAME=Media
+      - MEDIA_PATH=/data/Media
+      - MEDIA_PUBLIC=yes
+      - MEDIA_WRITABLE=no
+      - MEDIA_BROWSEABLE=yes
+      - CLOUD_NAME=Cloud
+      - CLOUD_WRITABLE=no
+      - CLOUD_BROWSEABLE=yes
+      - CLOUD_MSDFS_ROOT=yes
+      - CLOUD_MSDFS_PROXY=\[ip of cloud container]\Cloud
+    volumes:
+      - /mnt/Media:/data/Media
+      - /mnt/Incoming:/data/Incoming
 ```
-
-
-
-
-
 
 # Security considerations
+* Please mentally separate host user and samba logins from each other. Multiple samba logins can be done but they all operates under that one user.
+* It would be technically possible to set up multiple shares and users and use ```VALID_USERS``` to restrict access to each share effectively supporting multiple logins with separate shares, but this is bad security as host won't enforce this as host sees only one user.
+* Setting up multiple containers, logins, DFS and everything would allow quite crazy combos, please try to keep it simple though.
+* ```ALLOW_SMBV1``` downgrades minimum protocol to SMBv1 and enables NTLM and LANMAN authentication for whole container. This is not secure and recommended only for serving retro gear or so and perhaps read-only shares without any sensitive information.
