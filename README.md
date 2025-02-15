@@ -72,8 +72,8 @@ services:
     build:
       context: src
       args:
-        - UID=1000
-        - GID=1000
+        - UID=8445
+        - GID=8445
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -98,8 +98,8 @@ services:
     build:
       context: src
       args:
-        - UID=1000
-        - GID=1000
+        - UID=8445
+        - GID=8445
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -128,8 +128,8 @@ services:
     build:
       context: src
       args:
-        - UID=1000
-        - GID=1000
+        - UID=8445
+        - GID=8445
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -162,8 +162,8 @@ services:
     build:
       context: src
       args:
-        - UID=1000
-        - GID=1000
+        - UID=8445
+        - GID=8445
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -192,8 +192,8 @@ In this example we set up public share without any need to login and then use DF
     build:
       context: src
       args:
-        - UID=1000
-        - GID=1000
+        - UID=8445
+        - GID=8445
     restart: always
     cap_add:
       - NET_BIND_SERVICE
