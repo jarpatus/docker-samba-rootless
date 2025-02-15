@@ -2,8 +2,8 @@
 FROM alpine:3.18
 
 # Build args
-ARG UID=1000
-ARG GID=1000
+ARG UID=8445
+ARG GID=8445
 
 # Add packages
 RUN apk add --no-cache bash samba
