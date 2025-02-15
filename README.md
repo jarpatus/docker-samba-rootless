@@ -9,15 +9,15 @@ DFS can be used to aggregate shares from multiple containers into one so you cou
 
 ## Capabilities
 * ```NET_BIND_SERVICE``` - Needed so that samba can bind privileged ports.
+
+## Build args
   
+* ```UID``` - UID to run container with. Files server must be readable using this UID but user does not necessarily have to actually exist in host OS. 
+* ```GID``` - GID to run container with. Again group does not necessarily have to actually exist in host OS.
+
 ## Environment 
 
 ### For global section
-
-Mandatory environment variables:
-
-* ```UID``` - UID to run container with. Files server must be readable using this UID but user does not necessarily have to actually exist in host OS. 
-* ```GID``` - GID to run container with. Again group does not necessarily have to actually exist in host OS.
 
 Optional environment variables:
 
@@ -71,6 +71,9 @@ services:
     container_name: samba_single
     build:
       context: src
+      args:
+        - UID=1000
+        - GID=1000
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -94,6 +97,9 @@ services:
     container_name: samba_multi
     build:
       context: src
+      args:
+        - UID=1000
+        - GID=1000
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -121,6 +127,9 @@ services:
     container_name: samba_guest
     build:
       context: src
+      args:
+        - UID=1000
+        - GID=1000
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -152,6 +161,9 @@ services:
     container_name: samba_single
     build:
       context: src
+      args:
+        - UID=1000
+        - GID=1000
     restart: always
     cap_add:
       - NET_BIND_SERVICE
@@ -179,6 +191,9 @@ In this example we set up public share without any need to login and then use DF
     container_name: samba_guest
     build:
       context: src
+      args:
+        - UID=1000
+        - GID=1000
     restart: always
     cap_add:
       - NET_BIND_SERVICE

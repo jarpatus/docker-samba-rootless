@@ -4,6 +4,9 @@ services:
     container_name: samba_work
     build:
       context: src
+      args:
+        - UID=1000
+        - GID=1000
     restart: always
     cap_add:
       - NET_BIND_SERVICE
