@@ -1,4 +1,4 @@
-# Rootless samba container
+# Samba rootless
 Ultra simple rootless samba container for us who do not like daemons running root, not even in containers. Naturally limits use cases quite a lot as samba must run as single user and single user only. Hence you need separate container for each user and each container needs it's own IP address. At some point it becomes ridiculous so I guess this is best suited for home use where you need to have one or two users and perhaps public share for media devices or so.
 
 When planning implementation, it is best to kind of forget how samba normally operates with multiple users and think one instance of container as a personal file server of single user. Even if you enable guest access or create multiple logins for single container, samba will still operate as single user no matter what. Thus to avoid security hazards by misconfiguration it probably is the best to create separate guest container for public files and not mix and match.
@@ -7,13 +7,13 @@ DFS can be used to aggregate shares from multiple containers into one so you cou
 
 # Compose file
 
-## Capabilities
-* ```NET_BIND_SERVICE``` - Needed so that samba can bind privileged ports.
-
 ## Build args
   
 * ```UID``` - UID to run container with. Files server must be readable using this UID but user does not necessarily have to actually exist in host OS. 
 * ```GID``` - GID to run container with. Again group does not necessarily have to actually exist in host OS.
+
+## Capabilities
+* ```NET_BIND_SERVICE``` - Needed so that samba can bind privileged ports.
 
 ## Environment 
 
