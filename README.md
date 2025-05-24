@@ -19,7 +19,7 @@ DFS can be used to aggregate shares from multiple containers into one so you cou
 
 * ```ENABLE_NMBD``` - Set to true to enable nmbd for NetBIOS requests. You may want to use ```NETBIOS_NAME``` as well with this.
 
-### For global section
+### For Samba global section
 
 Optional environment variables:
 
@@ -32,12 +32,12 @@ Optional environment variables:
 * ```ANONYMOUS``` - Set to yes to enable guest access for the server. See Security considerations.
 * ```LOG_LEVEL``` - Log level. Defaults to 1.
 * ```DNS_PROXY``` - Set to yes to enable DNS proxy.
-* ```ALLOW_SMBV1``` - Set to yes to downgrade security back to 80s for retro gear. See Security considerations.
+* ```ALLOW_SMBV1``` - Set to yes to enable SMBv1 for retro gear. See SMBv1.
 * ```GLOBAL_OPTS``` - Additional global options if not listed above.
 
 Note that we use term login when we refer to username and password given to samba when accessing the share. This is different from user which samba is running. Container always runs as single user and filesystem permissions for that user are enforced, but container could also have multiple logins all of which in the end operates as that single user (we do this by creating multiple pseudo-users with the same UID and GID than main samba user). Multiple logins can be added by defining ```USER``` and ```PASS``` variables multiple times and prefixing them with XXX_. One user can be unprefixed or all users can be prefixed. 
 
-### For share sections
+### For Samba share sections
 
 Multiple shares can be added by defining variables below multiple times and prefixing them with XXX_ where XXX is share specific string. One share can be unprefixed or all shares can be prefixed.
 
@@ -223,4 +223,8 @@ In this example we set up public share without any need to login and then use DF
 * Please mentally separate host user and samba logins from each other. Multiple samba logins can be done but they all operates under that one user.
 * It would be technically possible to set up multiple shares and users and use ```VALID_USERS``` to restrict access to each share effectively supporting multiple logins with separate shares, but this is bad security as host won't enforce this as host sees only one user.
 * Setting up multiple containers, logins, DFS and everything would allow quite crazy combos, please try to keep it simple though.
-* ```ALLOW_SMBV1``` downgrades minimum protocol to SMBv1 and enables NTLM and LANMAN authentication for whole container. This is not secure and recommended only for serving retro gear or so and perhaps read-only shares without any sensitive information.
+
+# SMBv1
+```ALLOW_SMBV1``` downgrades minimum protocol to SMBv1 to allow retro gear like Windows 98 to connect. Note that this is naturally bad idea unless in isolated environment so take care. Furthermore SMBv1 support has been dropped from Samba 4.16 and onwards, so in order to use this old Samba version must be used (Alpine Linux 3.16 tops) hence we have two Dockerfiles, one for SMBv2 and one for SMBv1. Using outdated distro is also bad idea so take care.
+
+Also not that despite all attempts it turned out impossible (?) to make Windows 98 to authenticate, installing dsclient did not help nor any amount of Samba settings despite many sources saying otherwise. Only anonymous authentication seemed to work...
