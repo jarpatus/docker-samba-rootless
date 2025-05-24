@@ -17,6 +17,8 @@ DFS can be used to aggregate shares from multiple containers into one so you cou
 
 ## Environment 
 
+* ```ENABLE_NMBD``` - Set to true to enable nmbd for NetBIOS requests. You may want to use ```NETBIOS_NAME``` as well with this.
+
 ### For global section
 
 Optional environment variables:
@@ -24,12 +26,13 @@ Optional environment variables:
 * ```USER``` - Samba username used to access the shares. If not defined then only guest shares can be accessed.
 * ```PASS``` - Samba password used to access the shares. If not defined then only guest shares can be accessed.
 * ```WORKGROUP``` - Workgroup. Defaults to MYGROUP.
+* ```NETBIOS_NAME``` - NetBIOS name. Defaults to hostname (which, unless explicitly set, is random).
 * ```SERVER_STRING``` - Server string. Defaults to Samba Server.
 * ```SERVER_ROLE``` - Server role. Defaults to standalone server.
-* ```ANONYMOUS``` - If set to yes then guest access will be enabled for the server. See Security considerations.
+* ```ANONYMOUS``` - Set to yes to enable guest access for the server. See Security considerations.
 * ```LOG_LEVEL``` - Log level. Defaults to 1.
-* ```DNS_PROXY``` - DNS proxy enable. Defaults to no.
-* ```ALLOW_SMBV1``` - Downgrades security back to 80s for retro gear. See Security considerations.
+* ```DNS_PROXY``` - Set to yes to enable DNS proxy.
+* ```ALLOW_SMBV1``` - Set to yes to downgrade security back to 80s for retro gear. See Security considerations.
 * ```GLOBAL_OPTS``` - Additional global options if not listed above.
 
 Note that we use term login when we refer to username and password given to samba when accessing the share. This is different from user which samba is running. Container always runs as single user and filesystem permissions for that user are enforced, but container could also have multiple logins all of which in the end operates as that single user (we do this by creating multiple pseudo-users with the same UID and GID than main samba user). Multiple logins can be added by defining ```USER``` and ```PASS``` variables multiple times and prefixing them with XXX_. One user can be unprefixed or all users can be prefixed. 
@@ -46,14 +49,14 @@ Mandatory environment variables:
 Optional environment variables:
 
 * ```COMMENT``` - Share comment.
-* ```PUBLIC``` - If set to yes then guest access is enabled for the share. Note that ```ANONYMOUS``` also needs to be set to yes. Defaults to no.
+* ```PUBLIC``` - Set to yes to enable guest access for the share. Note that ```ANONYMOUS``` also needs to be set to yes.
 * ```VALID_USERS``` - List of logins allowed to access the share. Defaults to all users if share is not public and if it is then omitted by default.
-* ```WRITABLE``` - Share is writable (still needs filesystemlevel access for the ```UID``` or ```GID```). Defaults to no.
-* ```BROWSEABLE``` - Share shows up in share listings. Defaults to no.
+* ```WRITABLE``` - Set to yes to make share writable (still needs filesystemlevel access for the ```UID``` or ```GID```).
+* ```BROWSEABLE``` - Set to yes to make share browseable.
 * ```CREATE_MASK``` - File create mask.
 * ```DIRECTORY_MASK``` - Directory create mask.
-* ```WARE_MSDFS_ROOT``` - Is DFS root share (will also enable DFS on global level).
-* ```WARE_MSDFS_PROXY``` - Share to link to.
+* ```MSDFS_ROOT``` - Is DFS root share (will also enable DFS on global level).
+* ```MSDFS_PROXY``` - Share to link to.
 * ```SHARE_OPTS``` - Additional share options if not listed above.
  
 ## Volumes

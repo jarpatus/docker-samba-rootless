@@ -1,12 +1,12 @@
 # Start from Apline linux
-FROM alpine:3.18
+FROM alpine:3.16
 
 # Build args
 ARG UID=8445
 ARG GID=8445
 
 # Add packages
-RUN apk add --no-cache bash samba
+RUN apk add --no-cache supervisor samba bash nano
 
 # Add user for samba
 RUN addgroup -g $GID samba
@@ -25,8 +25,10 @@ RUN echo user8:x:$UID:$GID:Linux User,,,:/home/samba:/sbin/nologin >> /etc/passw
 RUN echo user9:x:$UID:$GID:Linux User,,,:/home/samba:/sbin/nologin >> /etc/passwd
 
 # Create config files
-COPY ./app /
+RUN mkdir -p /run/supervisor
+RUN chown samba:samba /run/supervisor
 RUN chown -Rv samba:samba /etc/samba /var/log/samba /var/cache/samba /var/lib/samba /run/samba
+COPY ./app /
 
 # Drop root
 USER samba

@@ -10,7 +10,7 @@ add_user() {
   logins+=($login)
   login_user_map[$login]=$user 
   echo "***************************** Add user $user and map it to samba login $login"
-  printf "%s\n%s\n" "${!var_pass}" "${!var_pass}" | pdbedit -t -a $user
+  printf "%s\n%s\n" "${!var_pass}" "${!var_pass}" | pdbedit -c /tmp -t -a $user
   echo "$user = $login" >> /tmp/users.map
 }
 
@@ -63,6 +63,9 @@ declare -a users
 declare -a logins
 declare -A login_user_map
 
+# Set defaults for environment variables
+[ "$ENABLE_NMBD" != "true" ] && export ENABLE_NMBD="false"
+
 # Create samba users
 touch /tmp/users.map
 [ -n "$USER" ] && add_user ""
@@ -73,6 +76,7 @@ done
 # Create global configuration
 echo "[global]" > /tmp/smb.conf
 echo "   workgroup = ${WORKGROUP:=MYGROUP}" >> /tmp/smb.conf
+[ -n "$NETBIOS_NAME" ] && echo "   netbios name = ${NETBIOS_NAME}" >> /tmp/smb.conf
 echo "   server string = ${SERVER_STRING:=Samba Server}" >> /tmp/smb.conf
 echo "   server role = ${SERVER_ROLE:=standalone server}" >> /tmp/smb.conf
 echo "   username map = /tmp/users.map" >> /tmp/smb.conf
@@ -84,12 +88,9 @@ echo "   log level = ${LOG_LEVEL:=1}" >> /tmp/smb.conf
 echo "   dns proxy = ${DNS_PROXY:=no}" >> /tmp/smb.conf
 [ -n "$(env | grep "_MSDFS_PROXY=")" ] && echo "   host msdfs = yes" >> /tmp/smb.conf
 if [ "$ALLOW_SMBV1" == "yes" ]; then
+  # Note: dropped in Samba 4.16!
   echo "   server min protocol = NT1" >> /tmp/smb.conf
-  echo "   ntlm auth = yes" >> /tmp/smb.conf
-  echo "   lanman auth = yes" >> /tmp/smb.conf
   echo "   client min protocol = NT1" >> /tmp/smb.conf
-  echo "   client ntlm auth = yes" >> /tmp/smb.conf
-  echo "   client lanman auth = yes" >> /tmp/smb.conf
 fi
 [ -n "$GLOBAL_OPTS" ] && echo -e "$GLOBAL_OPTS" >> /tmp/smb.conf
 
@@ -106,5 +107,5 @@ echo "***************************** users.map:"
 cat /tmp/users.map
 echo "*****************************"
 
-# Start samba
-exec smbd -s /tmp/smb.conf -F --no-process-group --debug-stdout
+# Start supervisor
+exec supervisord
