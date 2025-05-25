@@ -1,5 +1,5 @@
 # Start from Apline linux
-FROM alpine:latest
+FROM alpine:3.16
 
 # Build args
 ARG UID=8445
